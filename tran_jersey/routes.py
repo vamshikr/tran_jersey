@@ -10,7 +10,24 @@ from .exceptions import TranJerseyException, AppErrorCodes, InputValidationExcep
 
 class CurrentTrains(web.View):
 
-    async def get_njt_options(self, origin: str, destination: str, timestamp=None) -> dict:
+    def filter(self, schedule: dict, origin: str, destination: str) -> dict:
+
+        for option in schedule["ITEMS"]["ITEM"]:
+
+            origin_info = {
+                'origin': origin,
+                'departure_time': option["SCHED_DEP_DATE"]
+                }
+
+            for stop in option["STOPS"]["STOP"]:
+                if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO":
+                    payload = dict({**origin_info,
+                                   "destination": stop["NAME"],
+                                    "arrival_time": stop["TIME"]
+                                })
+                    yield payload
+
+    async def get_njt_options(self, origin: str, destination: str, page: int) -> dict:
 
         if origin not in self.request.app["all_stations"] or \
                 destination not in self.request.app["all_stations"]:
@@ -20,9 +37,10 @@ class CurrentTrains(web.View):
         all_stations: dict = self.request.app["all_stations"]
         njt_client: NjTransitClient = self.request.app["njt_client"]
 
-        schedule = await njt_client.get_schedule(all_stations[origin])
+        full_schedule = await njt_client.get_schedule(all_stations[origin])
 
-        return schedule
+        return {"schedule": [option for option in self.filter(full_schedule, origin,
+                                                              destination.casefold())]}
 
     async def get(self) -> web.Response:
         """
@@ -34,7 +52,8 @@ class CurrentTrains(web.View):
         try:
 
             response = await self.get_njt_options(query_params['origin'],
-                                            query_params['destination'])
+                                                  query_params['destination'],
+                                                  query_params.get("page", 1))
             #logging.info(response)
             return web.json_response(response)
 
