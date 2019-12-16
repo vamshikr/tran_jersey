@@ -9,10 +9,10 @@ class AppErrorCodes(Enum):
         Enum for HTTP Error Codes
         '''
     INVALID_INPUT = 3
-    WEATHER_SERVICE_ERROR = 4
     GOOGLE_MAPS_ERROR = 5
     SERVICE_NOT_AVAILABLE = 6
     DB_OPERATION_FAILED = 7
+    STATION_NOT_FOUND = 8
 
 
 class TranJerseyException(Exception, ABC):

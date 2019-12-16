@@ -6,7 +6,7 @@ import os
 import uvloop
 from aiohttp import web
 
-from .caching import start_background_caching
+from .caching import start_background_caching, NjTransitClient
 from .helper import google_maps
 
 from .routes import add_routes
@@ -51,7 +51,8 @@ async def init_app() -> web.Application:
         logging.error("Google Maps service NOT available")
 
     app["all_stations"] = get_all_stations("./stationname_with_station2char.json")
-    app.on_startup.append(start_background_caching)
+    app["njt_client"] = NjTransitClient(app["all_stations"])
+    #app.on_startup.append(start_background_caching)
     # Adding routes
     add_routes(app)
     return app

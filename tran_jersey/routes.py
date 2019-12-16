@@ -4,10 +4,25 @@ import logging
 
 from aiohttp import web
 
-from .exceptions import TranJerseyException
+from .caching import NjTransitClient
+from .exceptions import TranJerseyException, AppErrorCodes, InputValidationException
 
 
-class CurrentWeather(web.View):
+class CurrentTrains(web.View):
+
+    async def get_njt_options(self, origin: str, destination: str, timestamp=None) -> dict:
+
+        if origin not in self.request.app["all_stations"] or \
+                destination not in self.request.app["all_stations"]:
+            raise InputValidationException(AppErrorCodes.STATION_NOT_FOUND,
+                                           ["Station not found"])
+
+        all_stations: dict = self.request.app["all_stations"]
+        njt_client: NjTransitClient = self.request.app["njt_client"]
+
+        schedule = await njt_client.get_schedule(all_stations[origin])
+
+        return schedule
 
     async def get(self) -> web.Response:
         """
@@ -18,11 +33,9 @@ class CurrentWeather(web.View):
         logging.info('Query params: %s', query_params)
         try:
 
-            response = {
-                "dummy": True,
-                "curr_dt": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
-            }
-            logging.info(response)
+            response = await self.get_njt_options(query_params['origin'],
+                                            query_params['destination'])
+            #logging.info(response)
             return web.json_response(response)
 
         except TranJerseyException as err:
@@ -37,4 +50,4 @@ def add_routes(app: web.Application):
     :param app:
     :return:
     """
-    app.router.add_view("/current_weather", CurrentWeather)
+    app.router.add_view("/current_weather", CurrentTrains)
