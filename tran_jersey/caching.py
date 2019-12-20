@@ -12,6 +12,7 @@ import aiohttp
 from aiohttp import ClientConnectorError
 
 from tran_jersey.db_driver import DbDriver
+from tran_jersey.exceptions import AppErrorCodes, NjTransitException
 
 
 class NjTransitClient:
@@ -86,6 +87,24 @@ class NjTransitClient:
         return child
 
     @classmethod
+    def filter_schedule(cls, schedule: dict, origin: str, destination: str) -> dict:
+
+        for option in schedule["ITEMS"]["ITEM"]:
+
+            origin_info = {
+                'origin': origin,
+                'departure_time': option["SCHED_DEP_DATE"]
+                }
+
+            for stop in option["STOPS"]["STOP"]:
+                if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO":
+                    payload = dict({**origin_info,
+                                   "destination": stop["NAME"],
+                                    "arrival_time": stop["TIME"]
+                                   })
+                    yield payload
+
+    @classmethod
     def xml_to_json(cls, xml_text: str):
         json_data = json.loads(xet.XML(xml_text).text)
         #return cls.parse_datetime('', json_data["STATION"])
@@ -118,6 +137,10 @@ class NjTransitClient:
                 retry_count += 1
                 await asyncio.sleep(1)
 
+        raise NjTransitException(AppErrorCodes.SERVICE_NOT_AVAILABLE,
+                                 "Failed to get schedule from {}".format(
+                                     NjTransitClient.NJT_TRAIN_SCHED_URL))
+
     async def run(self):
 
         while True:
@@ -132,7 +155,7 @@ class NjTransitClient:
 
 
 async def start_schedule_cacher(app):
-    sched_cacher = NjTransitClient(app["all_stations"])
+    sched_cacher = NjTransitClient(app["station_map"])
     asyncio.create_task(sched_cacher.run())
 
 

@@ -15,7 +15,7 @@ class GoogleMaps:
     def __init__(self, api_key):
         self.api_key = api_key
 
-    async def validate_location(self, latitude: float, longitude: float):
+    async def validate_location(self, latitude: float, longitude: float) -> bool:
 
         params = {
             'latlng': '{},{}'.format(latitude, longitude),
@@ -29,20 +29,26 @@ class GoogleMaps:
 
         return False
 
-    async def get_latlon(self, zipcode: int) -> tuple:
+    async def get_train_stations(self, latitude: float, longitude: float,
+                                 valid_stations=None) -> list:
 
         params = {
-            'address': zipcode,
-            'key': self.api_key
+            'location': '{},{}'.format(latitude, longitude),
+            'key': self.api_key,
+            'type': "train_station",
+            "radius": "1600"
         }
+
         async with aiohttp.ClientSession() as session:
-            async with session.post('https://maps.googleapis.com/maps/api/geocode/json',
+            async with session.post('https://maps.googleapis.com/maps/api/place/nearbysearch/json',
                                     params=params) as response:
                 if response.status == HTTPStatus.OK:
-                    data = await response.json()
-                    logging.info(data)
-                    if data['results']:
-                        location = data["results"][0]["geometry"]["location"]
-                        return location["lat"], location["lng"]
+                    payload = await response.json()
+                    if payload['status'] == 'OK':
+                        if valid_stations:
+                            return [result["name"] for result in payload["result"]
+                                    if result["name"] in valid_stations]
+                        else:
+                            return [result["name"] for result in payload["result"]]
 
-        raise ValueError(f'Invalid zipcode: {zipcode}')
+        return []

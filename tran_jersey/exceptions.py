@@ -31,21 +31,21 @@ class TranJerseyException(Exception, ABC):
 
 
 class InputValidationException(TranJerseyException):
-    HTTP_CODE = HTTPStatus.BAD_REQUEST.value
+    HTTP_CODE = HTTPStatus.NOT_ACCEPTABLE.value
 
-    def __init__(self, error_code: AppErrorCodes, message: list):
+    def __init__(self, error_code: AppErrorCodes, message: str):
         super().__init__(error_code, message)
 
 
 class NjTransitException(TranJerseyException):
-    HTTP_CODE = HTTPStatus.SERVICE_UNAVAILABLE.value
+    HTTP_CODE = HTTPStatus.FAILED_DEPENDENCY.value
 
     def __init__(self, error_code: AppErrorCodes, message: str):
         super().__init__(error_code, message)
 
 
 class DBConnectionFailure(TranJerseyException):
-    HTTP_CODE = HTTPStatus.INTERNAL_SERVER_ERROR.value
+    HTTP_CODE = HTTPStatus.FAILED_DEPENDENCY.value
 
     def __init__(self, error_code: AppErrorCodes, message: str):
         super().__init__(error_code, message)
