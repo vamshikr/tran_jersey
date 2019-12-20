@@ -6,7 +6,7 @@ from webargs import fields, validate
 from webargs.aiohttpparser import parser
 from aiohttp import web
 
-from .caching import NjTransitClient
+from .njtransit import NjTransitClient
 from .exceptions import TranJerseyException, AppErrorCodes, InputValidationException
 from .helper.google_maps import GoogleMaps
 
@@ -98,7 +98,7 @@ class TransitOptions(web.View):
         if len(filtered_schedule) > TransitOptions.PAGE_SIZE * (page - 1):
             start = TransitOptions.PAGE_SIZE * (page - 1)
             end = start + TransitOptions.PAGE_SIZE
-            return {"schedule": filtered_schedule[start:end]}
+            return {"schedule": njt_client.datetime_to_str(filtered_schedule[start:end])}
 
         return {"schedule": 0}
 

@@ -6,7 +6,7 @@ import os
 import uvloop
 from aiohttp import web
 
-from .caching import start_background_caching, NjTransitClient
+from .njtransit import start_background_caching, NjTransitClient
 from .helper import google_maps
 
 from .routes import add_routes

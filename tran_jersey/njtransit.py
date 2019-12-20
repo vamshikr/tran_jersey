@@ -64,7 +64,26 @@ class NjTransitClient:
         return trie_struct
 
     @classmethod
-    def parse_datetime(cls, parent: str, child):
+    def datetime_to_str(cls, child):
+        """
+        Parsing the trie DS
+        :param parent:
+        :param child:
+        :return:
+        """
+
+        if isinstance(child, dict):
+            for key, val in child.items():
+                child[key] = cls.datetime_to_str( val)
+        elif isinstance(child, list):
+            child = [cls.datetime_to_str( val) for val in child]
+        elif isinstance(child, datetime):
+            child = datetime.strftime(child, cls.DATETIME_FORMAT)
+
+        return child
+
+    @classmethod
+    def strtime_to_datetime(cls, parent: str, child):
         """
         Parsing the trie DS
         :param parent:
@@ -75,9 +94,9 @@ class NjTransitClient:
 
             if isinstance(child, dict):
                 for key, val in child.items():
-                    child[key] = cls.parse_datetime(cls.get_key(parent, key), val)
+                    child[key] = cls.strtime_to_datetime(cls.get_key(parent, key), val)
             elif isinstance(child, list):
-                child = [cls.parse_datetime(parent, val) for val in child]
+                child = [cls.strtime_to_datetime(parent, val) for val in child]
             elif isinstance(child, str):
                 child = datetime.strptime(child, cls.DATETIME_FORMAT).replace(tzinfo=cls.EST).\
                     astimezone(pytz.UTC)
@@ -93,11 +112,15 @@ class NjTransitClient:
 
             origin_info = {
                 'origin': origin,
-                'departure_time': option["SCHED_DEP_DATE"]
+                'departure_time': option["SCHED_DEP_DATE"],
+                "train_line": option["LINE"],
+                "track_number": option["TRACK"]
                 }
 
             for stop in option["STOPS"]["STOP"]:
-                if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO":
+                if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO" and \
+                        stop["TIME"] > option["SCHED_DEP_DATE"]:
+
                     payload = dict({**origin_info,
                                    "destination": stop["NAME"],
                                     "arrival_time": stop["TIME"]
@@ -107,11 +130,10 @@ class NjTransitClient:
     @classmethod
     def xml_to_json(cls, xml_text: str):
         json_data = json.loads(xet.XML(xml_text).text)
-        #return cls.parse_datetime('', json_data["STATION"])
-        return json_data["STATION"]
+        return cls.strtime_to_datetime('', json_data["STATION"])
 
     @classmethod
-    async def get_schedule(cls, station2l: str):
+    async def get_schedule(cls, station2l: str) -> dict:
 
         retry_count = 0
 
@@ -140,24 +162,3 @@ class NjTransitClient:
         raise NjTransitException(AppErrorCodes.SERVICE_NOT_AVAILABLE,
                                  "Failed to get schedule from {}".format(
                                      NjTransitClient.NJT_TRAIN_SCHED_URL))
-
-    async def run(self):
-
-        while True:
-            for station2l in self.all_stations.values():
-                # Call the NJTransit API
-                schedule = await NjTransitClient.get_schedule(station2l)
-
-                if schedule:
-                    await self.db_driver.update(station2l, schedule)
-
-            await asyncio.sleep(60 * NjTransitClient.INTERVAL)
-
-
-async def start_schedule_cacher(app):
-    sched_cacher = NjTransitClient(app["station_map"])
-    asyncio.create_task(sched_cacher.run())
-
-
-async def start_background_caching(app):
-    asyncio.create_task(start_schedule_cacher(app))
