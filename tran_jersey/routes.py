@@ -8,7 +8,7 @@ from aiohttp import web
 
 from .njtransit import NjTransitClient
 from .exceptions import TranJerseyException, AppErrorCodes, InputValidationException
-from .helper.google_maps import GoogleMaps
+from tran_jersey.google_maps import GoogleMaps
 
 
 class TransitOptions(web.View):

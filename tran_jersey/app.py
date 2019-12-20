@@ -6,8 +6,8 @@ import os
 import uvloop
 from aiohttp import web
 
-from .njtransit import start_background_caching, NjTransitClient
-from .helper import google_maps
+from .njtransit import NjTransitClient
+from . import google_maps
 
 from .routes import add_routes
 
