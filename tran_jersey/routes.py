@@ -29,7 +29,7 @@ class TransitOptions(web.View):
         LONGITUDE_KEY: fields.Float(location='query', required=False,
                                     validate=validate.Range(min=-180, max=180)),
         DESTINATION_STATION: fields.Str(location='query', required=True),
-        PAGE: fields.Int(location='query', missing=1),
+        PAGE: fields.Int(location='query', missing=1, validate=validate.Range(1,1000))
     }
 
     async def validate_inputs(self, query_params: dict):
@@ -110,9 +110,10 @@ class TransitOptions(web.View):
         if len(filtered_schedule) > TransitOptions.PAGE_SIZE * (page - 1):
             start = TransitOptions.PAGE_SIZE * (page - 1)
             end = start + TransitOptions.PAGE_SIZE
-            return {"schedule": njt_client.datetime_to_str(filtered_schedule[start:end])}
+            return {"schedule": njt_client.datetime_to_str(filtered_schedule[start:end]),
+                    "page": page}
 
-        return {"schedule": []}
+        return {"schedule": [], "page": page}
 
     async def get(self) -> web.Response:
         """

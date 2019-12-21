@@ -1,0 +1,127 @@
+
+## Tran Jersey
+A REST API to get current public transit options between 2 locations. The API supports using `latitude` and `longitude` for source location. The API in-turn relies upon services such as  https://www.njtransit.com/[NJ TRANSIT] to get the transit information.
+
+### Setup/Install
+Follow these steps to setup the application
+
+#### Clone the `tran_jersey` repository
+```
+git clone https://github.com/vamshikr/tran_jersey.git && \
+cd tran_jersey
+```
+
+#### Create a `env.conf` file with the following environment variables
+
+Register with https://datasource.njtransit.com/SignUp.aspx to get access credentials.
+
+```
+NJT_USERNAME=<your njtransit username>
+NJT_PASSWORD=<your njtransit password>
+NJT_BASE_URL=http://njttraindata_tst.njtransit.com:8090/njttraindata.asmx
+```
+
+#### If you are want latitude and longitude services, also add your _Google Maps API key_ to the `env.conf`
+```
+GOOGLE_MAPS_APIKEY=<your google maps api key>
+```
+
+#### Start the tran_jersey application
+
+This application is containerized using Docker. To build and run the dockerized application, run the following command:
+
+```
+./docker_run.sh
+```
+
+If all the above steps pass, then the `tran_jersey` application is ready to use. The API is now accessible on host port `8080`.
+
+
+##### Sample logs from the running application
+```
+[2019-12-21 13:09:27 +0000] [6] [INFO] Starting gunicorn 20.0.4
+[2019-12-21 13:09:27 +0000] [6] [INFO] Listening at: http://0.0.0.0:8080 (6)
+[2019-12-21 13:09:27 +0000] [6] [INFO] Using worker: aiohttp.GunicornUVLoopWebWorker
+[2019-12-21 13:09:27 +0000] [8] [INFO] Booting worker with pid: 8
+21-12-2019:13:09:28,31 INFO     [app.py:54] Google Maps service available
+```
+
+
+### Using the API
+
+#### API Endpoint
+* The API endpoint is `/transit/schedule` and the URL is http://localhost:8080/transit/schedule
+* The API only support the `GET` method
+
+#### Request Parameters
+[[request-parameters]]
+.Request Parameters:
+[width="99%",cols="30%,40%v,30%",options="header",style="literal"]
+|==========================
+| Key | Value | Description
+| `origin` | Name of the city in New Jersey | Example: "Aberdeen-Matawan", Optional if using `latitude` and `longitude` for location.
+| `destination` | Name of the city in New Jersey | Example: "Hazlet", This parameter is required
+| `latitude` | floating-point number between `-90` and `+90` | Optional and if used, should be along with `longitude`
+| `longitude` | floating-point number between `-180` and `+180` | Optional and if used, along with `latitude`
+|`page`| a positive number | Example: `2`, Optional, default is `1`
+|==========================
+
+By default the API only returns the first `3` chronologically sorted results, use `page` parameters to access the subsequent results
+
+##### Example 1
+```
+curl -X GET --insecure --globoff 'http://localhost:8080/transit/schedule?origin=Aberdeen-Matawan&destination=Hazlet'
+```
+
+.Response
+```
+{
+  "schedule": [
+    {
+      "origin": "Aberdeen-Matawan",
+      "departure_time": "21-Dec-2019 02:11:15 PM",
+      "train_line": "North Jersey Coast Line",
+      "track_number": "1",
+      "destination": "Hazlet",
+      "arrival_time": "21-Dec-2019 02:15:00 PM"
+    },
+    {
+      "origin": "Aberdeen-Matawan",
+      "departure_time": "21-Dec-2019 03:07:30 PM",
+      "train_line": "North Jersey Coast Line",
+      "track_number": "1",
+      "destination": "Hazlet",
+      "arrival_time": "21-Dec-2019 03:10:30 PM"
+    },
+    {
+      "origin": "Aberdeen-Matawan",
+      "departure_time": "21-Dec-2019 04:11:15 PM",
+      "train_line": "North Jersey Coast Line",
+      "track_number": "1",
+      "destination": "Hazlet",
+      "arrival_time": "21-Dec-2019 04:14:15 PM"
+    }
+  ]
+}
+```
+
+#### Response JSON
+[[response-attributes]]
+.Request JSON Attributes:
+[width="99%",cols="40%,60%v",options="header",style="literal"]
+|==========================
+| Key | Value
+| `schedule` | A list of transit options
+| `schedule.origin` | Origin station
+| `schedule.departure_time` | Departure time
+| `schedule.train_line` | Train name/line
+| `schedule.track_number` | Track number
+| `schedule.destination` | Destination station
+| `schedule.arrival_time` | Destination arrival time
+| `page` | result page number
+|==========================
+
+##### Example 2
+```
+curl --globoff -X GET 'http://localhost:8080/transit/schedule?origin=Aberdeen-Matawan&destination=Hazlet&page=2'
+```
