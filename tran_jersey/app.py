@@ -41,8 +41,6 @@ async def init_app() -> web.Application:
     """
     init_logger(os.environ.get('LOGGING_LEVEL', logging.INFO))
 
-    #event_loop = uvloop.new_event_loop()
-    #asyncio.set_event_loop(event_loop)
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
     app = web.Application()
