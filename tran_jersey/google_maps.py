@@ -39,6 +39,8 @@ class GoogleMaps:
             "radius": "1600"
         }
 
+        logging.info("Getting train stations near (%f, %f)", latitude, longitude)
+
         async with aiohttp.ClientSession() as session:
             async with session.post('https://maps.googleapis.com/maps/api/place/nearbysearch/json',
                                     params=params) as response:
