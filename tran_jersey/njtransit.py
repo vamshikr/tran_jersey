@@ -15,6 +15,8 @@ from tran_jersey.exceptions import AppErrorCodes, NjTransitException
 
 
 class NjTransitClient:
+    """New Jersy Transit Interface"""
+
     INTERVAL = int(os.environ.get("CACHE_INTERVAL", "30"))
     NJT_USERNAME = os.environ["NJT_USERNAME"]
     NJT_PASSWORD = os.environ["NJT_PASSWORD"]
@@ -24,11 +26,11 @@ class NjTransitClient:
                            "ITEMS/ITEM/SCHED_DEP_DATE",
                            "ITEMS/ITEM/LAST_MODIFIED",
                            "ITEMS/ITEM/STOPS/STOP/TIME"]
-    TRIE_STRUCT = None
+    TRIE_STRUCT: set = {}
     EST = pytz.timezone('US/Eastern')
     DATETIME_FORMAT = "%d-%b-%Y %I:%M:%S %p"
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *_, **__):
         cls.TRIE_STRUCT = cls.construct_trie(cls.DATETIME_ATTRIBUTES)
         return super(NjTransitClient, cls).__new__(cls)
 
@@ -72,9 +74,9 @@ class NjTransitClient:
 
         if isinstance(child, dict):
             for key, val in child.items():
-                child[key] = cls.datetime_to_str( val)
+                child[key] = cls.datetime_to_str(val)
         elif isinstance(child, list):
-            child = [cls.datetime_to_str( val) for val in child]
+            child = [cls.datetime_to_str(val) for val in child]
         elif isinstance(child, datetime):
             child = datetime.strftime(child, cls.DATETIME_FORMAT)
 
@@ -96,7 +98,7 @@ class NjTransitClient:
             elif isinstance(child, list):
                 child = [cls.strtime_to_datetime(parent, val) for val in child]
             elif isinstance(child, str):
-                child = datetime.strptime(child, cls.DATETIME_FORMAT).replace(tzinfo=cls.EST).\
+                child = datetime.strptime(child, cls.DATETIME_FORMAT).replace(tzinfo=cls.EST). \
                     astimezone(pytz.UTC)
             else:
                 logging.error("###Type not recognized: %s=%s", parent, child)
@@ -104,7 +106,15 @@ class NjTransitClient:
         return child
 
     @classmethod
-    def filter_schedule(cls, schedule: dict, origin: str, destination: str) -> dict:
+    def filter_schedule(cls, schedule: dict, origin: str, destination: str) -> list:
+        """
+        get data only for origin and destination
+        :param schedule:
+        :param origin:
+        :param destination:
+        :return:
+        """
+        filtered_schedule = []
 
         for option in schedule["ITEMS"]["ITEM"]:
 
@@ -113,26 +123,28 @@ class NjTransitClient:
                 'departure_time': option["SCHED_DEP_DATE"],
                 "train_line": option["LINE"],
                 "track_number": option["TRACK"]
-                }
+            }
 
             for stop in option["STOPS"]["STOP"]:
                 if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO" and \
                         stop["TIME"] > option["SCHED_DEP_DATE"]:
-
                     payload = dict({**origin_info,
-                                   "destination": stop["NAME"],
+                                    "destination": stop["NAME"],
                                     "arrival_time": stop["TIME"]
-                                   })
-                    yield payload
+                                    })
+                    filtered_schedule.append(payload)
+
+        return filtered_schedule
 
     @classmethod
     def xml_to_json(cls, xml_text: str):
+        """Convert schedule from xml to json"""
         json_data = json.loads(xet.XML(xml_text).text)
         return cls.strtime_to_datetime('', json_data["STATION"])
 
     @classmethod
     async def get_schedule(cls, station2l: str) -> dict:
-
+        """Get schedule for a given station from NJ Transit"""
         retry_count = 0
 
         while retry_count < NjTransitClient.RETRIES:

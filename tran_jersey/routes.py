@@ -2,16 +2,19 @@ import json
 import logging
 from pprint import pprint
 
+from aiohttp import web
 from webargs import fields, validate
 from webargs.aiohttpparser import parser
-from aiohttp import web
 
-from .njtransit import NjTransitClient
-from .exceptions import TranJerseyException, AppErrorCodes, InputValidationException
 from tran_jersey.google_maps import GoogleMaps
+from .exceptions import TranJerseyException, AppErrorCodes, InputValidationException
+from .njtransit import NjTransitClient
 
 
 class TransitOptions(web.View):
+    """
+    View from /transit/schedule
+    """
     LATITUDE_KEY = "latitude"
     LONGITUDE_KEY = "longitude"
     ORIGIN_STATION = "origin"
@@ -30,7 +33,11 @@ class TransitOptions(web.View):
     }
 
     async def validate_inputs(self, query_params: dict):
-
+        """
+        validate query parameters
+        :param query_params:
+        :return:
+        """
         errors = []
 
         if TransitOptions.LATITUDE_KEY not in query_params and \
@@ -39,8 +46,8 @@ class TransitOptions(web.View):
             errors.append("Either origin station or origin latitude and longitude must me given")
 
         if TransitOptions.ORIGIN_STATION not in query_params and \
-            (TransitOptions.LATITUDE_KEY not in query_params or
-                TransitOptions.LONGITUDE_KEY not in query_params):
+                (TransitOptions.LATITUDE_KEY not in query_params or
+                 TransitOptions.LONGITUDE_KEY not in query_params):
             errors.append("Either origin station or origin latitude and longitude must me given")
 
         if TransitOptions.LATITUDE_KEY in query_params and \
@@ -83,16 +90,21 @@ class TransitOptions(web.View):
             raise InputValidationException(AppErrorCodes.INVALID_INPUT,
                                            '\n'.join(errors))
 
-    async def get_njt_options(self, origin: str, destination: str, page: int) -> dict:
-
+    async def get_transit_options(self, origin: str, destination: str, page: int) -> dict:
+        """
+        Get transit options
+        :param origin:
+        :param destination:
+        :param page:
+        :return:
+        """
         all_stations: dict = self.request.app["station_map"]
         njt_client: NjTransitClient = self.request.app["njt_client"]
 
         full_schedule = await njt_client.get_schedule(all_stations[origin])
         pprint(full_schedule)
-        filtered_schedule = [option for option in njt_client.filter_schedule(full_schedule,
-                                                                             origin,
-                                                                       destination.casefold())]
+        filtered_schedule = njt_client.filter_schedule(full_schedule, origin,
+                                                       destination.casefold())
         logging.info(filtered_schedule)
 
         if len(filtered_schedule) > TransitOptions.PAGE_SIZE * (page - 1):
@@ -104,7 +116,7 @@ class TransitOptions(web.View):
 
     async def get(self) -> web.Response:
         """
-        GET method handler for /current_weather
+        GET method handler for /transit/schedule
         :return:
         """
         query_params = await parser.parse(TransitOptions.GET_ARGS, self.request)
@@ -120,13 +132,13 @@ class TransitOptions(web.View):
                     query_params[TransitOptions.LATITUDE_KEY],
                     query_params[TransitOptions.LONGITUDE_KEY])
 
-                response = await self.get_njt_options(station_nearby[0],
+                response = await self.get_transit_options(station_nearby[0],
+                                                          query_params['destination'],
+                                                          query_params["page"])
+
+            response = await self.get_transit_options(query_params['origin'],
                                                       query_params['destination'],
                                                       query_params["page"])
-
-            response = await self.get_njt_options(query_params['origin'],
-                                                  query_params['destination'],
-                                                  query_params["page"])
             return web.json_response(response)
 
         except TranJerseyException as err:

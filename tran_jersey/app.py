@@ -25,9 +25,13 @@ def init_logger(logger_level):
 
 
 def get_all_stations(stations_file: str) -> dict:
-
-    with open(stations_file) as fp:
-        return json.load(fp)
+    """
+    Read stations map from a file
+    :param stations_file:
+    :return:
+    """
+    with open(stations_file) as fptr:
+        return json.load(fptr)
 
 
 async def init_app() -> web.Application:

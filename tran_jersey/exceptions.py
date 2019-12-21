@@ -5,9 +5,8 @@ from http import HTTPStatus
 
 @unique
 class AppErrorCodes(Enum):
-    '''
-        Enum for HTTP Error Codes
-        '''
+    """Enum for HTTP Error Codes"""
+
     INVALID_INPUT = 3
     GOOGLE_MAPS_ERROR = 5
     SERVICE_NOT_AVAILABLE = 6

@@ -5,7 +5,9 @@ import aiohttp
 
 
 class GoogleMaps:
-
+    """
+    Google maps interface
+    """
     HOST_NAME = 'maps.googleapis.com'
     HEADERS = {
         'Content-Type': 'application/json',
@@ -16,7 +18,12 @@ class GoogleMaps:
         self.api_key = api_key
 
     async def validate_location(self, latitude: float, longitude: float) -> bool:
-
+        """
+        checking if a latitude, longitude is valid or not
+        :param latitude:
+        :param longitude:
+        :return:
+        """
         params = {
             'latlng': '{},{}'.format(latitude, longitude),
             'key': self.api_key
@@ -31,7 +38,13 @@ class GoogleMaps:
 
     async def get_train_stations(self, latitude: float, longitude: float,
                                  valid_stations=None) -> list:
-
+        """
+        Get nearest train station for given lat, lon
+        :param latitude:
+        :param longitude:
+        :param valid_stations:
+        :return:
+        """
         params = {
             'location': '{},{}'.format(latitude, longitude),
             'key': self.api_key,
@@ -50,7 +63,7 @@ class GoogleMaps:
                         if valid_stations:
                             return [result["name"] for result in payload["result"]
                                     if result["name"] in valid_stations]
-                        else:
-                            return [result["name"] for result in payload["result"]]
+
+                        return [result["name"] for result in payload["result"]]
 
         return []
