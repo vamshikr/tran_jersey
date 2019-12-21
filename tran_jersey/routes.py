@@ -139,9 +139,11 @@ class TransitOptions(web.View):
                                                           query_params['destination'],
                                                           query_params["page"])
 
-            response = await self.get_transit_options(query_params['origin'],
-                                                      query_params['destination'],
-                                                      query_params["page"])
+            else:
+                response = await self.get_transit_options(query_params['origin'],
+                                                          query_params['destination'],
+                                                          query_params["page"])
+
             return web.json_response(response)
 
         except TranJerseyException as err:
