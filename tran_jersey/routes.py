@@ -100,7 +100,7 @@ class TransitOptions(web.View):
             end = start + TransitOptions.PAGE_SIZE
             return {"schedule": njt_client.datetime_to_str(filtered_schedule[start:end])}
 
-        return {"schedule": 0}
+        return {"schedule": []}
 
     async def get(self) -> web.Response:
         """

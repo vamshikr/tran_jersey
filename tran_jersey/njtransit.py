@@ -11,7 +11,6 @@ import pytz
 import aiohttp
 from aiohttp import ClientConnectorError
 
-from tran_jersey.db_driver import DbDriver
 from tran_jersey.exceptions import AppErrorCodes, NjTransitException
 
 
@@ -35,7 +34,6 @@ class NjTransitClient:
 
     def __init__(self, station_names: dict):
         self.all_stations = station_names
-        self.db_driver = DbDriver()
 
     @classmethod
     def get_key(cls, parent, child):
@@ -147,6 +145,7 @@ class NjTransitClient:
                     async with session.post(NjTransitClient.NJT_TRAIN_SCHED_URL,
                                             headers=headers, data=payload, ssl=False) as response:
 
+                        print(type(response))
                         if response.status == HTTPStatus.OK:
                             response_body = await response.text()
                             return cls.xml_to_json(response_body)

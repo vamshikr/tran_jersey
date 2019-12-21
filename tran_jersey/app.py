@@ -37,8 +37,9 @@ async def init_app() -> web.Application:
     """
     init_logger(os.environ.get('LOGGING_LEVEL', logging.INFO))
 
-    event_loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(event_loop)
+    #event_loop = uvloop.new_event_loop()
+    #asyncio.set_event_loop(event_loop)
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
     app = web.Application()
 
@@ -53,7 +54,7 @@ async def init_app() -> web.Application:
     app["station_map"] = get_all_stations("./stationname_with_station2char.json")
     app["station_names"] = [name.casefold() for name in app["station_map"].keys()]
     app["njt_client"] = NjTransitClient(app["station_map"])
-    #app.on_startup.append(start_background_caching)
+
     # Adding routes
     add_routes(app)
     return app
