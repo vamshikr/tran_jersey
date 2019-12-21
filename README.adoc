@@ -1,6 +1,6 @@
 
 ## Tran Jersey
-A REST API to get current public transit options between 2 locations. The API supports using `latitude` and `longitude` for source location. The API in-turn relies upon services such as  https://www.njtransit.com/[NJ TRANSIT] to get the transit information.
+A REST API to get current public transit options between 2 locations in New Jersey. The API supports using `latitude` and `longitude` for source location. The API in-turn relies upon services such as  https://www.njtransit.com/[NJ TRANSIT] to get the transit information.
 
 ### Setup/Install
 Follow these steps to setup the application
@@ -21,7 +21,7 @@ NJT_PASSWORD=<your njtransit password>
 NJT_BASE_URL=http://njttraindata_tst.njtransit.com:8090/njttraindata.asmx
 ```
 
-#### If you are want latitude and longitude services, also add your _Google Maps API key_ to the `env.conf`
+#### To use latitude and longitude services, add your _Google Maps API key_ to the `env.conf`
 ```
 GOOGLE_MAPS_APIKEY=<your google maps api key>
 ```
@@ -34,7 +34,7 @@ This application is containerized using Docker. To build and run the dockerized 
 ./docker_run.sh
 ```
 
-If all the above steps pass, then the `tran_jersey` application is ready to use. The API is now accessible on host port `8080`.
+If all the above steps pass, then the `tran_jersey` application is ready to use. The REST API is now accessible on `localhost:8080`.
 
 
 ##### Sample logs from the running application
@@ -124,4 +124,9 @@ curl -X GET --insecure --globoff 'http://localhost:8080/transit/schedule?origin=
 ##### Example 2
 ```
 curl --globoff -X GET 'http://localhost:8080/transit/schedule?origin=Aberdeen-Matawan&destination=Hazlet&page=2'
+```
+
+##### Example 3, using latitude and longitude
+```
+curl --globoff -X GET 'http://localhost:8080/transit/schedule?latitude=40.713472&longitude=-74.185678&destination=Hazlet&page=2
 ```

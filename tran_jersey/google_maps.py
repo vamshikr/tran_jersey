@@ -61,9 +61,9 @@ class GoogleMaps:
                     payload = await response.json()
                     if payload['status'] == 'OK':
                         if valid_stations:
-                            return [result["name"] for result in payload["result"]
+                            return [result["name"] for result in payload["results"]
                                     if result["name"] in valid_stations]
 
-                        return [result["name"] for result in payload["result"]]
+                        return [result["name"] for result in payload["results"]]
 
         return []

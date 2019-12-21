@@ -133,6 +133,8 @@ class TransitOptions(web.View):
                     query_params[TransitOptions.LATITUDE_KEY],
                     query_params[TransitOptions.LONGITUDE_KEY])
 
+                logging.info("Stations returned by google maps: %s", station_nearby)
+
                 response = await self.get_transit_options(station_nearby[0],
                                                           query_params['destination'],
                                                           query_params["page"])
