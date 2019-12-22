@@ -88,7 +88,7 @@ class TransitOptions(web.View):
 
         if errors:
             raise InputValidationException(AppErrorCodes.INVALID_INPUT,
-                                           '\n'.join(errors))
+                                           "\n".join(errors))
 
     async def get_transit_options(self, origin: str, destination: str, page: int) -> dict:
         """
@@ -102,7 +102,7 @@ class TransitOptions(web.View):
         njt_client: NjTransitClient = self.request.app["njt_client"]
 
         full_schedule = await njt_client.get_schedule(all_stations[origin])
-        pprint(full_schedule)
+        logging.info(full_schedule)
         filtered_schedule = njt_client.filter_schedule(full_schedule, origin,
                                                        destination.casefold())
         logging.info(filtered_schedule)

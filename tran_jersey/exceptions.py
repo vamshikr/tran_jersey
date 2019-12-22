@@ -30,7 +30,7 @@ class TranJerseyException(Exception, ABC):
 
 
 class InputValidationException(TranJerseyException):
-    HTTP_CODE = HTTPStatus.NOT_ACCEPTABLE.value
+    HTTP_CODE = HTTPStatus.UNPROCESSABLE_ENTITY.value
 
     def __init__(self, error_code: AppErrorCodes, message: str):
         super().__init__(error_code, message)

@@ -10,6 +10,7 @@ import pytz
 
 import aiohttp
 from aiohttp import ClientConnectorError
+from pprint import pprint
 
 from tran_jersey.exceptions import AppErrorCodes, NjTransitException
 
@@ -125,14 +126,16 @@ class NjTransitClient:
                 "track_number": option["TRACK"]
             }
 
-            for stop in option["STOPS"]["STOP"]:
-                if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO" and \
-                        stop["TIME"] > option["SCHED_DEP_DATE"]:
-                    payload = dict({**origin_info,
-                                    "destination": stop["NAME"],
-                                    "arrival_time": stop["TIME"]
-                                    })
-                    filtered_schedule.append(payload)
+            if option["STOPS"]:
+
+                for stop in option["STOPS"]["STOP"]:
+                    if stop["NAME"].casefold() == destination and stop["DEPARTED"] == "NO" and \
+                            stop["TIME"] > option["SCHED_DEP_DATE"]:
+                        payload = dict({**origin_info,
+                                        "destination": stop["NAME"],
+                                        "arrival_time": stop["TIME"]
+                                        })
+                        filtered_schedule.append(payload)
 
         return filtered_schedule
 
