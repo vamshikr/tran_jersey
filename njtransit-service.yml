@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: sentiment-analysis
+  name: njtransit-api
+  labels:
+    app: njtransit-api
+spec:
+  selector:
+    matchLabels:
+      app: njtransit-api
+  replicas: 1
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: njtransit-api
+    spec:
+      containers:
+      - image: vamshikrb/agilis-chems-webapp:latest
+        imagePullPolicy: Always
+        name: njtransit-api
+        ports:
+          - containerPort: 8080
+        env:
+          - name: NJT_BASE_URL
+            value: "http://njttraindata_tst.njtransit.com:8090/njttraindata.asmx"
+          - name: NJT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: njtransit-secrets
+                key: njt_username
+          - name: NJT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: njtransit-secrets
+                key: njt_password
+          - name: GOOGLE_MAPS_APIKEY
+            valueFrom:
+              secretKeyRef:
+                name: njtransit-secrets
+                key: google_maps_apikey
+
+---          
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: sentiment-analysis
+  name: njtransit-api-lb
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: njtransit-api
