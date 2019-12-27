@@ -121,6 +121,8 @@ class NjTransitClient:
 
             origin_info = {
                 'origin': origin,
+                'co-ordinates': "{},{}".format(option.get('GPSLATITUDE', ""),
+                                               option.get('GPSLONGITUDE', "")),
                 'departure_time': option["SCHED_DEP_DATE"],
                 "train_line": option["LINE"],
                 "track_number": option["TRACK"]
@@ -157,10 +159,10 @@ class NjTransitClient:
                     payload = {"username": NjTransitClient.NJT_USERNAME,
                                "password": NjTransitClient.NJT_PASSWORD,
                                "station": station2l}
+
                     async with session.post(NjTransitClient.NJT_TRAIN_SCHED_URL,
                                             headers=headers, data=payload, ssl=False) as response:
 
-                        print(type(response))
                         if response.status == HTTPStatus.OK:
                             response_body = await response.text()
                             return cls.xml_to_json(response_body)

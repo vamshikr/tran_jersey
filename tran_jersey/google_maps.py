@@ -49,7 +49,7 @@ class GoogleMaps:
             'location': '{},{}'.format(latitude, longitude),
             'key': self.api_key,
             'type': "train_station",
-            "radius": "1600"
+            "radius": 1600
         }
 
         logging.info("Getting train stations near (%f, %f)", latitude, longitude)

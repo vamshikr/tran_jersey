@@ -8,6 +8,7 @@ from http import HTTPStatus
 class TestTransJersey:
 
     URL = "http://localhost:8080/transit/schedule"
+    #URL = "https://www.vamboy.co/transit/schedule"
 
     def test_valid_1(self):
         response = requests.get(self.URL, params={"origin": "Aberdeen-Matawan",
@@ -73,7 +74,7 @@ class TestTransJersey:
                                                   "page": 1})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY.value
 
-    def test_valid_6(self):
+    def test_invalid_6(self):
         "Invalid param"
         response = requests.get(self.URL, params={"latitude": "40.575974",
                                                   "longituode": "-74.277628",
@@ -81,7 +82,7 @@ class TestTransJersey:
                                                   "page": 1})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY.value
 
-    def test_valid_7(self):
+    def test_invalid_7(self):
         "Invalid param"
         response = requests.get(self.URL, params={"latituyde": "40.575974",
                                                   "longitude": "-74.277628",
@@ -89,7 +90,7 @@ class TestTransJersey:
                                                   "page": 1})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY.value
 
-    def test_valid_8(self):
+    def test_invalid_8(self):
         "Invalid param"
         response = requests.get(self.URL, params={"latitude": "40.575974",
                                                   "longitude": "-74.277628",

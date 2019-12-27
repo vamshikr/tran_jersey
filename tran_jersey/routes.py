@@ -126,7 +126,7 @@ class TransitOptions(web.View):
         try:
             await self.validate_inputs(query_params)
 
-            if "origin" not in query_params:
+            if TransitOptions.ORIGIN_STATION not in query_params:
                 google_maps: GoogleMaps = self.request.app["google_maps"]
 
                 station_nearby = await google_maps.get_train_stations(
@@ -147,6 +147,7 @@ class TransitOptions(web.View):
             return web.json_response(response)
 
         except TranJerseyException as err:
+            logging.exception(err)
             return web.Response(status=err.HTTP_CODE,
                                 content_type="application/json",
                                 text=json.dumps(err.to_dict()))
