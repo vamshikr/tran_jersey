@@ -136,3 +136,7 @@ curl --globoff -X GET 'http://localhost:8080/transit/schedule?origin=Aberdeen-Ma
 ```
 curl --globoff -X GET 'http://localhost:8080/transit/schedule?latitude=40.713472&longitude=-74.185678&destination=Hazlet&page=2
 ```
+
+```
+curl --globoff -X GET 'https://www.vamboy.co/transit/schedule?latitude=40.301149&longitude=-73.991174&destination=New%20York%20Penn%20Station'
+```
