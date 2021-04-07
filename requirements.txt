@@ -15,4 +15,4 @@ uvloop==0.14.0
 yarl==1.4.2
 motor==2.1.0
 pytz==2019.3
-webargs==5.5.2
+webargs==5.5.3
